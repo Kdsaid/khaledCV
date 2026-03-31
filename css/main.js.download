@@ -1,0 +1,156 @@
+// ─── Email link: Gmail web on desktop, mailto on phone ───
+const emailLink = document.getElementById('email-link');
+if (emailLink) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    emailLink.href = isMobile ? emailLink.dataset.mailto : emailLink.dataset.gmail;
+    if (isMobile) emailLink.removeAttribute('target');
+}
+
+// ─── Nav scroll effect ───
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// ─── Mobile menu ───
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
+hamburger.addEventListener('click', () => {
+    mobileMenu.classList.toggle('open');
+    document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+});
+function closeMobile() {
+    mobileMenu.classList.remove('open');
+    document.body.style.overflow = '';
+}
+// expose globally for onclick attributes
+window.closeMobile = closeMobile;
+
+// ─── Scroll reveal ───
+const revealSelectors = '.reveal, .reveal-left, .reveal-right, .reveal-scale';
+const revealElements = document.querySelectorAll(revealSelectors);
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+            const parent = entry.target.parentElement;
+            const siblings = parent ? [...parent.querySelectorAll(revealSelectors)] : [];
+            const idx = siblings.indexOf(entry.target);
+            setTimeout(() => entry.target.classList.add('visible'), Math.max(0, idx) * 100);
+            observer.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.08, rootMargin: '0px 0px -50px 0px' });
+revealElements.forEach(el => observer.observe(el));
+
+// ─── Smooth scroll ───
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+
+// ─── Cursor glow ───
+const cursorGlow = document.getElementById('cursorGlow');
+if (cursorGlow) {
+    let mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
+    document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+    (function animateGlow() {
+        glowX += (mouseX - glowX) * 0.08;
+        glowY += (mouseY - glowY) * 0.08;
+        cursorGlow.style.left = glowX + 'px';
+        cursorGlow.style.top = glowY + 'px';
+        requestAnimationFrame(animateGlow);
+    })();
+}
+
+// ─── Hero particles ───
+const particlesContainer = document.getElementById('heroParticles');
+if (particlesContainer) {
+    function createParticle() {
+        const p = document.createElement('div');
+        p.classList.add('particle');
+        p.style.left = Math.random() * 100 + '%';
+        p.style.width = p.style.height = (Math.random() * 3 + 1) + 'px';
+        p.style.animationDuration = (Math.random() * 8 + 6) + 's';
+        p.style.animationDelay = (Math.random() * 4) + 's';
+        particlesContainer.appendChild(p);
+        setTimeout(() => p.remove(), 16000);
+    }
+    for (let i = 0; i < 15; i++) setTimeout(createParticle, i * 300);
+    setInterval(createParticle, 1200);
+}
+
+// ─── Button ripple tracking ───
+document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+        const r = btn.getBoundingClientRect();
+        btn.style.setProperty('--x', ((e.clientX - r.left) / r.width * 100) + '%');
+        btn.style.setProperty('--y', ((e.clientY - r.top) / r.height * 100) + '%');
+    });
+});
+
+// ─── Counter animation ───
+const statNumbers = document.querySelectorAll('.stat-number');
+const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const text = el.textContent.trim();
+        const match = text.match(/^(\d+)/);
+        if (match) {
+            const target = parseInt(match[1]), suffix = text.replace(match[1], '');
+            let current = 0;
+            const step = Math.ceil(target / 30);
+            const iv = setInterval(() => {
+                current = Math.min(current + step, target);
+                el.textContent = current + suffix;
+                if (current >= target) clearInterval(iv);
+            }, 40);
+        }
+        el.style.animation = 'countUp 0.6s var(--ease-out) forwards';
+        statObserver.unobserve(el);
+    });
+}, { threshold: 0.5 });
+statNumbers.forEach(el => statObserver.observe(el));
+
+// ─── Parallax ───
+const heroGlow = document.querySelector('.hero-glow');
+const heroGrid = document.querySelector('.hero-grid');
+if (heroGlow && heroGrid) {
+    window.addEventListener('scroll', () => {
+        const s = window.scrollY;
+        if (s < window.innerHeight) {
+            heroGlow.style.transform = `translateY(calc(-50% + ${s * 0.3}px))`;
+            heroGrid.style.transform = `translateY(calc(-50% + ${s * 0.15}px))`;
+        }
+    }, { passive: true });
+}
+
+// ─── Project card tilt ───
+document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `translateY(-3px) perspective(800px) rotateX(${-y * 4}deg) rotateY(${x * 4}deg)`;
+    });
+    card.addEventListener('mouseleave', () => {
+        card.style.transform = 'translateY(0) perspective(800px) rotateX(0) rotateY(0)';
+    });
+});
+
+// ─── Contact card magnetic hover ───
+document.querySelectorAll('.contact-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        card.style.transform = `translateY(-3px) translate(${(e.clientX - r.left - r.width/2)*0.15}px, ${(e.clientY - r.top - r.height/2)*0.15}px)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+});
+
+// ─── Float cards staggered reveal ───
+document.querySelectorAll('.float-card').forEach((card, i) => {
+    setTimeout(() => card.classList.add('visible'), 1200 + i * 200);
+});
